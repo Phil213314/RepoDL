@@ -4,6 +4,6 @@ Note: RepoDL is currently in beta. It currently only supports repos with `Packag
 # Requirements
 RepoDL works on any platform that has python and the following modules: 
 `os` (default python module), `requests`, `tqdm`.
-Tested by me on iOS (jailbroken, pythonista not supported), macOS and Linux.
+Tested by me on iOS (both unjailbroken (pythonista) and jailbroken), macOS and Linux.
 # Usage
 When the needed modules are installed (`pip3 install requests tqdm`) just run the script using python: `python3 repodl.py`
