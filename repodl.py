@@ -9,22 +9,18 @@ except Exception:
 	exit("tqdm module is not installed. It is required in order to run this script.")
 def dl(url, filename):
 	open(filename, 'wb').write(requests.get(url).content)
-repourl = input("Repo:")
-if not repourl.startswith("https://"):
-	choice = input("Warning! Your repo url doesnt start with 'https://'. If the repo uses another protocol (e. g. http://) type 'c'. If you forgot to add 'https://' type 'a'. If you want to exit type 'e': ")
-	if choice == "c":
-		pass
-	elif choice == "a":
-		repourl = "https://" + repourl
-	else:
-		exit()
-if not repourl.endswith("/"):
-	repourl += "/"
 if not os.path.exists("debs"):
 	os.makedirs("debs")
 else:
 	if not os.path.isdir("debs"):
 		exit("There is a file named 'debs' in the current folder. Remove it in order to run this script")
+if os.path.exists("Packages") or os.path.exists("Packages.bz2"):
+	exit("There is a file named 'Packages' or 'Packages.bz2' in the current folder. Remove it in order to run this script")
+repourl = input("Repo:")
+if not repourl.startswith("https://") and not repourl.startswith("http://"):
+		repourl = "https://" + repourl
+if not repourl.endswith("/"):
+	repourl += "/"
 def cleanf():
 	if os.path.exists("Packages"):
 		os.remove("Packages")
@@ -68,6 +64,7 @@ if debs == []:
 print("Successfully got Packages file")
 #print("Debs: " + ", ".join(debs))
 if len(debs) != len(packages) or len(debs) != len(versions) or len(packages) != len(versions):
+	cleanf()
 	exit("'Packages' format error")
 for i in tqdm(range(len(debs))):
 	dl(repourl + debs[i], "debs/" + packages[i] + "-" + versions[i] + ".deb")
