@@ -8,7 +8,7 @@ try:
 except Exception:
 	exit("tqdm module is not installed. It is required in order to run this script.")
 def dl(url, filename):
-	open(filename, 'wb').write(requests.get(url).content)
+	open(filename, 'wb').write(requests.get(url, headers={"X-Machine":"iPhone13,3", "X-Firmware":"14.3","X-Unique-ID":"00000000-0000000000000000"}).content)
 if not os.path.exists("debs"):
 	os.makedirs("debs")
 else:
