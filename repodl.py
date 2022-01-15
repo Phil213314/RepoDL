@@ -7,29 +7,29 @@ try:
 	from tqdm import tqdm
 except Exception:
 	exit("tqdm module is not installed. It is required in order to run this script.")
+def err_and_exit(dir, text):
+	with open(dir + "/error.log", 'w') as e:
+		e.write(text)
+	exit(text)
 def dl(url, filename):
-	open(filename, 'wb').write(requests.get(url, headers={"X-Machine":"iPhone13,3", "X-Firmware":"14.3","X-Unique-ID":"00000000-0000000000000000"}).content)
-if not os.path.exists("debs"):
-	os.makedirs("debs")
-else:
-	if not os.path.isdir("debs"):
-		exit("There is a file named 'debs' in the current folder. Remove it in order to run this script")
-if os.path.exists("Packages") or os.path.exists("Packages.bz2"):
-	exit("There is a file named 'Packages' or 'Packages.bz2' in the current folder. Remove it in order to run this script")
+	if filename == 0:
+		return requests.get(url, headers={"X-Machine":"iPhone13,3", "X-Firmware":"14.3","X-Unique-ID":"00000000-0000000000000000"}).content
+	else:
+		open(filename, 'wb').write(requests.get(url, headers={"X-Machine":"iPhone13,3", "X-Firmware":"14.3","X-Unique-ID":"00000000-0000000000000000"}).content)
 repourl = input("Repo:")
 if not repourl.startswith("https://") and not repourl.startswith("http://"):
 		repourl = "https://" + repourl
+		print("Warning. No protocol was provided in repo url so https is used.")
 if not repourl.endswith("/"):
 	repourl += "/"
-def cleanf():
-	if os.path.exists("Packages"):
-		os.remove("Packages")
-	if os.path.exists("Packages.bz2"):
-		os.remove("Packages.bz2")
-def parsePackages():
-	pkgf = open("Packages")
-	pkgc = pkgf.readlines()
-	pkgf.close()
+repodir = repourl.split("//")[1].split("/")[0]
+if not os.path.exists(repodir):
+	os.makedirs(repodir)
+else:
+	if not os.path.isdir(repodir):
+		exit("There is a file named '" + repodir + "' in the current folder. Remove it in order to run this script")
+def parsePackages(pkgc):
+	pkgc = pkgc.split("\n")
 	debs = []
 	packages = []
 	versions = []
@@ -41,31 +41,29 @@ def parsePackages():
 		elif pkgc[i].startswith("Version: "):
 			versions.append(pkgc[i].replace("Version: ", "").replace("\n", ""))
 	return [debs, packages, versions]
-print("Trying to download " + repourl + "Packages")
-dl(repourl + "Packages", "Packages")
-out = parsePackages()
+print("Trying to get " + repourl + "Packages")
+out = parsePackages((dl(repourl + "Packages", 0)).decode())
 debs = out[0]
 packages = out[1]
 versions = out[2]
 if debs == []:
 	print("File invalid.")
 	print("Trying to download " + repourl + "Packages.bz2")
-	os.remove("Packages")
-	dl(repourl + "Packages.bz2", "Packages.bz2")
-	open("Packages", 'wb').write(bz2.BZ2File("Packages.bz2").read())
-	out = parsePackages()
+	try:
+		out = parsePackages(bz2.decompress(dl(repourl + "Packages.bz2", 0)).decode())
+	except OSError:
+		print("File invalid.")
+		err_and_exit(repodir, "Could not get Packages file (bz2 err)")
 	debs = out[0]
 	packages = out[1]
 	versions = out[2]
 	if debs == []:
 		print("File invalid.")
-		cleanf()
-		exit("Could not get Packages file.")
+		err_and_exit(repodir, "Could not get Packages file")
 print("Successfully got Packages file")
 #print("Debs: " + ", ".join(debs))
 if len(debs) != len(packages) or len(debs) != len(versions) or len(packages) != len(versions):
-	cleanf()
-	exit("'Packages' format error")
+	err_and_exit(repodir, "File format error")
+os.makedirs(repodir + "/debs")
 for i in tqdm(range(len(debs))):
-	dl(repourl + debs[i], "debs/" + packages[i] + "-" + versions[i] + ".deb")
-cleanf()
+	dl(repourl + debs[i], repodir + "/debs/" + packages[i] + "-" + versions[i] + ".deb")
