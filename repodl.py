@@ -11,11 +11,12 @@ def err_and_exit(dir, text):
 	with open(dir + "/error.log", 'w') as e:
 		e.write(text)
 	exit(text)
+headers={"X-Machine":"iPhone13,3", "X-Firmware":"14.3","X-Unique-ID":"00000000-0000000000000000"}
 def dl(url, filename):
 	if filename == 0:
-		return requests.get(url, headers={"X-Machine":"iPhone13,3", "X-Firmware":"14.3","X-Unique-ID":"00000000-0000000000000000"}).content
+		return requests.get(url, headers=headers).content
 	else:
-		open(filename, 'wb').write(requests.get(url, headers={"X-Machine":"iPhone13,3", "X-Firmware":"14.3","X-Unique-ID":"00000000-0000000000000000"}).content)
+		open(filename, 'wb').write(requests.get(url, headers=headers).content)
 repourl = input("Repo:")
 if not repourl.startswith("https://") and not repourl.startswith("http://"):
 		repourl = "https://" + repourl
@@ -64,6 +65,7 @@ print("Successfully got Packages file")
 #print("Debs: " + ", ".join(debs))
 if len(debs) != len(packages) or len(debs) != len(versions) or len(packages) != len(versions):
 	err_and_exit(repodir, "File format error")
-os.makedirs(repodir + "/debs")
+if not os.path.exists(repodir + "/debs"):
+	os.makedirs(repodir + "/debs")
 for i in tqdm(range(len(debs))):
 	dl(repourl + debs[i], repodir + "/debs/" + packages[i] + "-" + versions[i] + ".deb")
